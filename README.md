@@ -1,4 +1,4 @@
-#RAoPT with Contextual Differential Privacy (CDP) Integration
+# RAoPT with Contextual Differential Privacy (CDP) Integration
 This project extends the RAoPT (Robust and Anonymous Optimal Trajectory Processing) framework with Contextual Differential Privacy enhancements to improve privacy protections without significantly compromising data utility.
 
 Prerequisites
