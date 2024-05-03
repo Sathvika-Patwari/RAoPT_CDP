@@ -155,3 +155,46 @@ def mean_confidence_interval(data: list, confidence: float = 0.99) -> \
     m, se = np.mean(a), scipy.stats.sem(a)
     h: float = se * scipy.stats.t.ppf((1 + confidence) / 2., n - 1)
     return float(m), h
+import geopandas as gpd
+import matplotlib.pyplot as plt
+
+def plot_density_map(density_map_path):
+    density_map = gpd.read_file(density_map_path)
+    fig, ax = plt.subplots(1, 1, figsize=(10, 10))
+    density_map.plot(column='count', ax=ax, legend=True,
+                     legend_kwds={'label': "Density of Points"},
+                     cmap='viridis')  # Adjust cmap as needed
+    plt.title('Density Heatmap')
+    plt.show()
+
+# Assuming density map is saved as a GeoJSON file
+plot_density_map('data/tdrive_output/density_file1.csv')
+
+import pandas as pd
+import matplotlib.pyplot as plt
+
+def plot_time_series(data_path):
+    data = pd.read_csv(data_path)
+    data['timestamp'] = pd.to_datetime(data['timestamp'])
+    plt.figure(figsize=(10, 5))
+    plt.plot(data['timestamp'], data['attribute'], label='Attribute over Time')  # Replace 'attribute'
+    plt.xlabel('Time')
+    plt.ylabel('Attribute Value')
+    plt.title('Time Series Analysis')
+    plt.legend()
+    plt.show()
+
+plot_time_series('data/tdrive/tdrive_output/.csv')
+
+import geopandas as gpd
+import matplotlib.pyplot as plt
+
+def plot_geographic_data(data_path):
+    data = gpd.read_file(data_path)
+    fig, ax = plt.subplots(figsize=(10, 10))
+    data.plot(ax=ax, markersize=10, color='red', marker='o', label='Geolocations')
+    plt.title('Scatter Plot on Map')
+    plt.legend()
+    plt.show()
+
+plot_geographic_data('output_path/beijing_sensitivity_map.geojson')
