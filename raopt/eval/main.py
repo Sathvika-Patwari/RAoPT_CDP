@@ -451,3 +451,41 @@ if __name__ == '__main__':
         for case in cases:
             if case['ID'] == CASE:
                 run_case(case)
+
+from gis_ops import download_and_process_osm_data, assign_sensitivity, save_sensitivity_map
+from spatial_analysis import calculate_density
+from spatial_analysis import process_folder_data
+import pandas as pd
+import os
+
+def main():
+    # Step 1: Handle Sensitivity Map
+    place_name = "Beijing, China"
+    buildings = download_and_process_osm_data(place_name)
+    buildings = assign_sensitivity(buildings)
+    sensitivity_map_path = 'data/beijing_sensitivity_map.shp'
+    save_sensitivity_map(buildings, sensitivity_map_path)
+    
+    # Step 2: Handle Density Map
+    data_dir = 'data'
+    tdrive_folder = os.path.join(data_dir, 't-drive')
+    geolife_folder = os.path.join(data_dir, 'geolife')
+
+    # # Setup output directories
+    tdrive_output = os.path.join(data_dir, 'tdrive_output')
+    geolife_output = os.path.join(data_dir, 'geolife_output')
+    os.makedirs(tdrive_output, exist_ok=True)
+    os.makedirs(geolife_output, exist_ok=True)
+
+    # # Process T-Drive data
+    process_folder_data(tdrive_folder, tdrive_output)
+
+    # Process GeoLife data
+    process_folder_data(geolife_folder, geolife_output)
+    data = pd.read_csv('data/trajectory_data.csv')
+    density = calculate_density(data)
+    density_map_path = 'data/trajectory_density.csv'
+    density.to_csv(density_map_path, index=False)
+
+if __name__ == "__main__":
+    main()
