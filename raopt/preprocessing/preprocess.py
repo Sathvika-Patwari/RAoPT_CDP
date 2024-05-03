@@ -334,3 +334,84 @@ def compute_quantiles(
                 for v in values:
                     fd.write(f"* **{names[v]}:** {round(upper_quantiles[q][v], 4)} -- "
                              f"{round(lower_quantiles[q][v], 4)}\n")
+
+from sklearn.cluster import KMeans
+
+def assess_geographic_sensitivity(data, n_clusters=5):
+    """ Cluster geographic locations to assess sensitivity based on proximity to sensitive locations. """
+    kmeans = KMeans(n_clusters=n_clusters, random_state=0)
+    clusters = kmeans.fit_predict(data[['latitude', 'longitude']])
+    sensitivity_scores = np.random.rand(n_clusters)  # Randomly generated for example purposes
+    data['sensitivity'] = sensitivity_scores[clusters]
+    return data
+
+def calculate_user_density(data, time_window='1H'):
+    """ Calculate user density based on time windows. """
+    data['timestamp'] = pd.to_datetime(data['timestamp'])
+    data.set_index('timestamp', inplace=True)
+    user_density = data.groupby(['latitude', 'longitude']).resample(time_window).count()
+    data.reset_index(inplace=True)
+    data['user_density'] = user_density.values
+    return data
+
+def dynamic_noise_adjustment(row, max_noise=0.01):
+    """ Adjust noise based on sensitivity and user density. """
+    sensitivity, density = row['sensitivity'], row['user_density']
+    noise_level = max_noise * sensitivity * (1/density if density > 0 else 1)
+    noise = np.random.normal(0, noise_level, size=2)  # noise for lat and lon
+    return noise
+
+def apply_noise(data):
+    """ Apply calculated noise to the data. """
+    noise_adjustments = data.apply(dynamic_noise_adjustment, axis=1, result_type='expand')
+    data[['latitude', 'longitude']] += noise_adjustments
+    return data
+
+import geopandas as gpd
+import pandas as pd
+from shapely.geometry import Point
+
+def calculate_density(data):
+    """ Calculate density of data points in geographic grids """
+    gdf = gpd.GeoDataFrame(data, geometry=gpd.points_from_xy(data.longitude, data.latitude))
+    gdf.crs = "EPSG:4326"  # WGS84 latitude-longitude projection
+    # Create geographic bins
+    grid_size = 0.01  # Decimal degrees, roughly corresponds to 1 km grid size
+    xmin, ymin, xmax, ymax = gdf.total_bounds
+    cols = int((xmax - xmin) / grid_size)
+    rows = int((ymax - ymin) / grid_size)
+    gdf['grid_col'] = ((gdf.geometry.x - xmin) / grid_size).astype(int)
+    gdf['grid_row'] = ((gdf.geometry.y - ymin) / grid_size).astype(int)
+    # Count points per grid
+    density = gdf.groupby(['grid_row', 'grid_col']).size().reset_index(name='count')
+    return density
+
+def apply_contextual_noise(data, sensitivity_map, density_map):
+    # Example function to apply noise based on sensitivity and density
+    # Join maps with the data on geographic identifiers or indices
+    data_with_sensitivity = data.merge(sensitivity_map, on='location_id', how='left')
+    data_with_density = data_with_sensitivity.merge(density_map, on='location_id', how='left')
+
+    # Calculate noise level based on sensitivity and density
+    noise_level = data_with_density['sensitivity_level'] * np.sqrt(data_with_density['density'])
+    data_with_density['data_value'] += np.random.normal(0, noise_level)
+
+    return data_with_density
+
+def load_maps(sensitivity_path, density_path):
+    # Load sensitivity and density maps
+    sensitivity_map = gpd.read_file(sensitivity_path)
+    density_map = pd.read_csv(density_path)
+    return sensitivity_map, density_map
+
+def process_data(data_path, sensitivity_map_path, density_map_path):
+    # Load data
+    data = pd.read_csv(data_path)
+    
+    # Load maps
+    sensitivity_map, density_map = load_maps(sensitivity_map_path, density_map_path)
+    
+    # Apply contextual noise based on maps
+    processed_data = apply_contextual_noise(data, sensitivity_map, density_map)
+
+    return processed_data
