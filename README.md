@@ -1,4 +1,37 @@
-# Reconstruction Attack on Protected Trajectories (RAoPT)
+#RAoPT with Contextual Differential Privacy (CDP) Integration
+This project extends the RAoPT (Robust and Anonymous Optimal Trajectory Processing) framework with Contextual Differential Privacy enhancements to improve privacy protections without significantly compromising data utility.
+
+Prerequisites
+Before you run this project, you need to ensure your environment is set up with the following:
+
+Python 3.8 or higher
+Pip package manager
+
+cd RAoPT-CDP
+Set Up a Virtual Environment (optional but recommended)
+
+python -m venv venv
+source venv/bin/activate  # On Windows use `venv\Scripts\activate`
+Install Dependency
+pip install -r requirements.txt
+Configuration
+Configure the system parameters by editing the config/settings.py file. This includes setting paths to data files, specifying the differential privacy parameters, and other system configurations.
+Running the Project
+Preprocessing Data
+Ensure your data files are placed in the data/ directory. Modify paths in the scripts if your structure is different.
+Run the preprocessing script to prepare the data:
+
+python preprocessing/preprocess.py
+Applying Contextual Differential Privacy
+To apply CDP to your trajectory data:
+
+python privacy_methods/main.py
+Evaluation
+To evaluate the privacy and utility of the processed data:
+
+python evaluation/visualize.py
+Visualization
+To visualize the comparison between traditional and contextual differential privacy methods:
 
 Artifacts for [ACSAC'22](https://www.acsac.org/2022/) paper 'Reconstruction Attack on Differential Private Trajectory Protection Mechanisms'.
 
